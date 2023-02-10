@@ -26,17 +26,17 @@ ensure-poetry:
 		exit 1;)
 
 mypy: ensure-poetry
-	poetry run mypy --strict app/
+	poetry run mypy --strict octo/
 
 lint: ensure-poetry mypy
 	poetry check
-	poetry run flake8 app/ tests/
+	poetry run flake8 octo/ tests/
 
 autoformat: ensure-poetry lint
-	poetry run black app tests
+	poetry run black octo tests
 
 test: ensure-poetry
-	poetry run pytest --cov app/ --strict tests
+	poetry run pytest --cov octo/ --strict tests
 
 clean:
 	find . -name '*.pyc' -delete
@@ -56,7 +56,7 @@ install: ensure-poetry clean
 
 run: ensure-poetry clean
 	export PYTHONPATH=$${PWD%/*}; \
-	poetry run uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+	poetry run uvicorn octo.main:app --host 0.0.0.0 --port 8000 --reload
 
 backend-image:
 	docker build -t dsb-backend:0.1.0 . --no-cache
