@@ -1,0 +1,16 @@
+[tool.poetry]
+name = "investment-tracker"
+version = "0.1.0"
+description = "Pulls data from investment broker APIs and pushes it to Notion"
+authors = ["bciobo <bogdan@thanksben.com>"]
+license = "MIT License"
+readme = "README.md"
+packages = [{include = "investment_tracker"}]
+
+[tool.poetry.dependencies]
+python = "^3.11"
+black = {extras = ["d"], version = "^23.1.0"}
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
