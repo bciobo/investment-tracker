@@ -1,0 +1,2 @@
+class ComdirectAuthenticationFailed(Exception):
+    pass
