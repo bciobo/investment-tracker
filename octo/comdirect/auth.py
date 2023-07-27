@@ -45,8 +45,8 @@ class TokenResponse:
 
 @dataclass
 class Session:
-    session_id: uuid.UUID
-    request_id: uuid.UUID
+    session_id: str
+    request_id: str
 
 
 @dataclass
@@ -73,7 +73,7 @@ class ComdirectAuth:
     @property
     def config(self):
         if not self._config:
-            self._config = self._parse_config(dotenv_values(CONFIG_FILENAME))
+            self._config = self._parse_config(dotenv_values())
         return self._config
 
     @property
@@ -133,13 +133,16 @@ class ComdirectAuth:
         data = response.json()
         return TokenResponse(**data)
 
+    def _make_token_header(self):
+        return f"Bearer {self.token.access_token}"
+
     def fetch_session_status(self) -> SessionStatusResponse:
         session_url = f"{self.config.base_api_url}session/clients/user/v1/sessions"
         request_info = {"clientRequestId": {"sessionId": self.session.session_id, "requestId": self.session.request_id}}
         headers = {
             **self.base_headers,
             "Content-Type": "application/json",
-            "Authorization": f"Bearer {self.token.access_token}",
+            "Authorization": self._make_token_header(),
             "x-http-request-info": json.dumps(request_info),
         }
 
@@ -152,8 +155,7 @@ class ComdirectAuth:
         return SessionStatusResponse(**data[0])
 
     def request_tan_challenge(self) -> SessionStatusResponse:
-        # url = f"{self.config.base_api_url}session/clients/user/v1/sessions/{self.session_response.identifier}/validate"
-        url = f"{self.config.base_api_url}session/clients/{self.session.session_id}/v1/sessions/{self.session_response.identifier}/validate"
+        url = f"{self.config.base_api_url}session/clients/user/v1/sessions/{self.session_response.identifier}/validate"
         request_info = {"clientRequestId": {"sessionId": self.session.session_id, "requestId": self.session.request_id}}
         headers = {
             **self.base_headers,
@@ -165,7 +167,7 @@ class ComdirectAuth:
         pp(url)
         pp(headers)
         pp(payload)
-        response = requests.request("POST", url, headers=headers, data=payload)
+        response = requests.request("POST", url, headers=headers, data=json.dumps(payload))
         pp(vars(response.request))
         if not response.ok:
             raise ComdirectAuthenticationFailed(response.text)
@@ -173,7 +175,7 @@ class ComdirectAuth:
         header = json.loads(response.headers.get("x-once-authentication-info"))
         pp(header)
         data = response.json()
-        return SessionStatusResponse(**data[0]), header["id"]
+        return SessionStatusResponse(**data), header["id"]
 
     def activate_tan(self) -> SessionStatusResponse:
         url = f"{self.config.base_api_url}session/clients/user/v1/sessions/{self.session_response.identifier}"
@@ -189,9 +191,9 @@ class ComdirectAuth:
         }
         payload = {"identifier": self.session_response.identifier, "sessionTanActive": True, "activated2FA": True}
 
-        response = requests.request("PATCH", url, headers=headers, data=payload)
+        response = requests.request("PATCH", url, headers=headers, data=json.dumps(payload))
         if not response.ok:
             raise ComdirectAuthenticationFailed(response.text)
 
         data = response.json()
-        return SessionStatusResponse(**data[0])
+        return SessionStatusResponse(**data)
