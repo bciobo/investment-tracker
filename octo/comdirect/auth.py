@@ -126,6 +126,16 @@ class ComdirectAuth:
         except Exception as e:
             raise ComdirectAuthenticationFailed(e.args[0])
 
+    def cd_secondary_flow(self, token: str) -> None:
+        oauth_url = f"{self.config.base_url}oauth/token"
+        payload = {
+            "client_id": self.config.client_id,
+            "client_secret": self.config.client_secret,
+            "token": token,
+            "grant_type": "cd_secondary",
+        }
+        response = requests.request("POST", oauth_url, headers=self.base_headers, data=payload)
+
     def auth_resource_owner_password_flow(self) -> TokenResponse:
         oauth_url = f"{self.config.base_url}oauth/token"
         payload = {
